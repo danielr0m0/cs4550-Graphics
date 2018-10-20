@@ -1,0 +1,7 @@
+Name: Daniel Romo 
+Date: 9/2/18
+Solution: How I approat the probelm is that I took the square example and changed the points to get different shapes.
+The hexagon shape was the most challenging of the homework. First, I tried to draw a hexagon on oneNote. After drawing
+a hexagon I saw where the points must belong. I had to have the center as my third point since I would use the triangle 
+fan method to draw my points. The triangle fan method uses the first and last point in order to draw a new triangle with a 
+new point so, making the center my last point will carry out that point with other new points.

@@ -1,0 +1,6 @@
+Daniel Romo
+My solution to this homework assignment is similar to homework 2.
+I looked at the square example to figure out how I was going to draw 
+my shape with at least three colors. With moving the rectangle i first
+made sure moving the rectangle will not cause it to go out of range. I only
+allow the rectangle to move within the area.

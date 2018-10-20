@@ -1,0 +1,5 @@
+Daniel Romo 
+for this assignment, My solution to this problem was simple. I used 
+one of the examples of the codes and modified it to fit the requirments.
+I added a event listener to the canvas where it clicks it start an interval where
+it will increment the subdivisions by one until it reaches the max subdivisions.
