@@ -9,25 +9,25 @@ var pointsArray = [];
 var normalsArray = [];
 
 var vertices = [
-        vec4( -0.5, -0.5,  0.5, 1.0 ),
-        vec4( -0.5,  0.5,  0.5, 1.0 ),
-        vec4( 0.5,  0.5,  0.5, 1.0 ),
-        vec4( 0.5, -0.5,  0.5, 1.0 ),
-        vec4( -0.5, -0.5, -0.5, 1.0 ),
-        vec4( -0.5,  0.5, -0.5, 1.0 ),
-        vec4( 0.5,  0.5, -0.5, 1.0 ),
-        vec4( 0.5, -0.5, -0.5, 1.0 )
+        vec4( -0.25,-0.25,  0.25, 1.0 ),
+        vec4( -0.25,  0.25,  0.25, 1.0 ),
+        vec4( 0.25,  0.25,  0.25, 1.0 ),
+        vec4( 0.25, -0.25,  0.25, 1.0 ),
+        vec4( -1.0, -1.0, -1.0, 1.0 ),
+        vec4( -1.0,  1.0, -1.0, 1.0 ),
+        vec4( 1.0,  1.0, -1.0, 1.0 ),
+        vec4( 1.0, -1.0, -1.0, 1.0 )
     ];
 
-var lightPosition = vec4(1.0, 1.0, 1.0, 0.0 );
-var lightAmbient = vec4(0.2, 0.2, 0.2, 1.0 );
-var lightDiffuse = vec4( 1.0, 1.0, 1.0, 1.0 );
-var lightSpecular = vec4( 1.0, 1.0, 1.0, 1.0 );
+var lightPosition = vec4(1.0, 1.0, 5.0, 0.0 );
+var lightAmbient = vec4(0.1, 0.1, 0.1, 1.0 );
+var lightDiffuse = vec4( 0.5, 0.5, 0.5, 1.0 );
+var lightSpecular = vec4( 0.5, 0.5, 0.5, 1.0 );
 
 var materialAmbient = vec4( 1.0, 0.0, 1.0, 1.0 );
 var materialDiffuse = vec4( 1.0, 0.8, 0.0, 1.0);
 var materialSpecular = vec4( 1.0, 0.8, 0.0, 1.0 );
-var materialShininess = 100.0;
+var materialShininess = 10.0;
 
 var ctm;
 var ambientColor, diffuseColor, specularColor;
@@ -45,6 +45,25 @@ var thetaLoc;
 
 var flag = true;
 
+var near = 0.1;
+var far = 10.0;
+var radius = 3.5;
+var theta2  = 0.0;
+var phi    = 0.0;
+var phi2 = 0.0;
+var dr = 5.0 * Math.PI/180.0;
+
+var  fovy = 90;  // Field-of-view in Y direction angle (in degrees)
+var  aspect = 1.0;       // Viewport aspect ratio
+
+var modelViewMatrix, projectionMatrix;
+var modelViewMatrixLoc, projectionMatrixLoc;
+var normalMatrix, normalMatrixLoc;
+
+var eye;
+var sideways;
+const at = vec3(0.0, 0.0, 0.0);
+const up = vec3(0.0, 1.0, 0.0);
 function quad(a, b, c, d) {
 
      var t1 = subtract(vertices[b], vertices[a]);
@@ -103,7 +122,7 @@ window.onload = function init() {
     gl.bufferData( gl.ARRAY_BUFFER, flatten(normalsArray), gl.STATIC_DRAW );
 
     var vNormal = gl.getAttribLocation( program, "vNormal" );
-    gl.vertexAttribPointer( vNormal, 3, gl.FLOAT, false, 0, 0 );
+    gl.vertexAttribPointer( vNormal, 3 , gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vNormal );
 
     var vBuffer = gl.createBuffer();
@@ -114,20 +133,21 @@ window.onload = function init() {
     gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vPosition);
 
-    thetaLoc = gl.getUniformLocation(program, "theta");
+    // thetaLoc = gl.getUniformLocation(program, "theta");
 
-    viewerPos = vec3(0.0, 0.0, -20.0 );
+    // viewerPos = vec3(0.0, 0.0, -20.0);
 
-    projection = ortho(-1, 1, -1, 1, -100, 100);
+    // projection = perspective(80, 1.0, 0.1,3.0);//ortho(-2, 2, -2, 2, -50, 50);
 
     var ambientProduct = mult(lightAmbient, materialAmbient);
     var diffuseProduct = mult(lightDiffuse, materialDiffuse);
     var specularProduct = mult(lightSpecular, materialSpecular);
 
-    document.getElementById("ButtonX").onclick = function(){axis = xAxis;};
-    document.getElementById("ButtonY").onclick = function(){axis = yAxis;};
-    document.getElementById("ButtonZ").onclick = function(){axis = zAxis;};
-    document.getElementById("ButtonT").onclick = function(){flag = !flag;};
+   modelViewMatrixLoc = gl.getUniformLocation( program, "modelViewMatrix" );
+    projectionMatrixLoc = gl.getUniformLocation( program, "projectionMatrix" );
+    normalMatrixLoc = gl.getUniformLocation( program, "normalMatrix" );
+
+
 
     gl.uniform4fv(gl.getUniformLocation(program, "ambientProduct"),
        flatten(ambientProduct));
@@ -141,29 +161,61 @@ window.onload = function init() {
     gl.uniform1f(gl.getUniformLocation(program,
        "shininess"),materialShininess);
 
-    gl.uniformMatrix4fv( gl.getUniformLocation(program, "projectionMatrix"),
-       false, flatten(projection));
-
+    // gl.uniformMatrix4fv( gl.getUniformLocation(program, "projectionMatrix"),
+    //    false, flatten(projection));
+    eye = vec3(radius*Math.sin(theta2)*Math.cos(phi),
+        radius*Math.sin(theta2)*Math.sin(phi), radius*Math.cos(theta2));
+    modelViewMatrix = lookAt(eye, at , up);
     render();
 }
 
-//commit
 var render = function(){
 
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    if(flag) theta[axis] += 2.0;
+    modelViewMatrix = lookAt(eye, at , up);
+    projectionMatrix = perspective(fovy, aspect, near, far);
 
-    modelView = mat4();
-    modelView = mult(modelView, rotate(theta[xAxis], [1, 0, 0] ));
-    modelView = mult(modelView, rotate(theta[yAxis], [0, 1, 0] ));
-    modelView = mult(modelView, rotate(theta[zAxis], [0, 0, 1] ));
+    normalMatrix = [
+        vec3(modelViewMatrix[0][0], modelViewMatrix[0][1], modelViewMatrix[0][2]),
+        vec3(modelViewMatrix[1][0], modelViewMatrix[1][1], modelViewMatrix[1][2]),
+        vec3(modelViewMatrix[2][0], modelViewMatrix[2][1], modelViewMatrix[2][2])
+    ];
 
-    gl.uniformMatrix4fv( gl.getUniformLocation(program,
-            "modelViewMatrix"), false, flatten(modelView) );
-
+    gl.uniformMatrix4fv( modelViewMatrixLoc, false, flatten(normalMatrix) );
+    gl.uniformMatrix4fv( projectionMatrixLoc, false, flatten(projectionMatrix) );
     gl.drawArrays( gl.TRIANGLES, 0, numVertices );
 
-
+    // flag = false;
     requestAnimFrame(render);
+}
+
+document.onkeydown = function moveShape(event){
+    
+    var key = String.fromCharCode(event.keyCode);
+    console.log("This is: " + key);
+    switch(key){
+        case "A": theta2 = Math.PI/90;
+                  sideways = true;
+                  break;
+        case "D": theta2 = -Math.PI/90;
+                  sideways = true;
+                    break;
+        case "S":  sideways = false;
+                   theta2 = Math.PI/90;
+                    break;
+        case "W": sideways = false; 
+                  theta2 = -Math.PI/90;
+                    break;
+    }
+    if(sideways){
+      eye = vec3(Math.cos(theta2)*eye[0] + eye[2]*Math.sin(theta2),
+        eye[1], eye[0]*Math.sin(-theta2) + eye[2]*Math.cos(theta2));
+      console.log(" " + eye[0] + " " + eye[1] + " " + eye[2]);
+    }
+    else{
+      eye = vec3(eye[0], Math.cos(theta2)*eye[1] + Math.sin(-theta2)*eye[2], Math.sin(theta2)*eye[1] + Math.cos(theta2)*eye[2]);
+      console.log(" " + eye[0] + " " + eye[1] + " " + eye[2]);
+    }
+    
 }
