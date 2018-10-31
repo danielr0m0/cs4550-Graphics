@@ -9,15 +9,15 @@ var pointsArray = [];
 var normalsArray = [];
 
 var vertices = [
-        vec4( -0.25,-0.25,  0.25, 1.0 ),
-        vec4( -0.25,  0.25,  0.25, 1.0 ),
-        vec4( 0.25,  0.25,  0.25, 1.0 ),
-        vec4( 0.25, -0.25,  0.25, 1.0 ),
-        vec4( -1.0, -1.0, -1.0, 1.0 ),
-        vec4( -1.0,  1.0, -1.0, 1.0 ),
-        vec4( 1.0,  1.0, -1.0, 1.0 ),
-        vec4( 1.0, -1.0, -1.0, 1.0 )
-    ];
+    vec4( -0.25,-0.25,  0.25, 1.0 ),
+    vec4( -0.25,  0.25,  0.25, 1.0 ),
+    vec4( 0.25,  0.25,  0.25, 1.0 ),
+    vec4( 0.25, -0.25,  0.25, 1.0 ),
+    vec4( -1.0, -1.0, -1.0, 1.0 ),
+    vec4( -1.0,  1.0, -1.0, 1.0 ),
+    vec4( 1.0,  1.0, -1.0, 1.0 ),
+    vec4( 1.0, -1.0, -1.0, 1.0 )
+];
 
 var lightPosition = vec4(1.0, 1.0, 5.0, 0.0 );
 var lightAmbient = vec4(0.1, 0.1, 0.1, 1.0 );
@@ -58,8 +58,6 @@ var  aspect = 1.0;       // Viewport aspect ratio
 
 var modelViewMatrix, projectionMatrix;
 var modelViewMatrixLoc, projectionMatrixLoc;
-var normalMatrix, normalMatrixLoc;
-
 var eye;
 var sideways;
 const at = vec3(0.0, 0.0, 0.0);
@@ -145,8 +143,6 @@ window.onload = function init() {
 
    modelViewMatrixLoc = gl.getUniformLocation( program, "modelViewMatrix" );
     projectionMatrixLoc = gl.getUniformLocation( program, "projectionMatrix" );
-    normalMatrixLoc = gl.getUniformLocation( program, "normalMatrix" );
-
 
 
     gl.uniform4fv(gl.getUniformLocation(program, "ambientProduct"),
@@ -172,17 +168,10 @@ window.onload = function init() {
 var render = function(){
 
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
     modelViewMatrix = lookAt(eye, at , up);
     projectionMatrix = perspective(fovy, aspect, near, far);
 
-    normalMatrix = [
-        vec3(modelViewMatrix[0][0], modelViewMatrix[0][1], modelViewMatrix[0][2]),
-        vec3(modelViewMatrix[1][0], modelViewMatrix[1][1], modelViewMatrix[1][2]),
-        vec3(modelViewMatrix[2][0], modelViewMatrix[2][1], modelViewMatrix[2][2])
-    ];
-
-    gl.uniformMatrix4fv( modelViewMatrixLoc, false, flatten(normalMatrix) );
+    gl.uniformMatrix4fv( modelViewMatrixLoc, false, flatten(modelViewMatrix) );
     gl.uniformMatrix4fv( projectionMatrixLoc, false, flatten(projectionMatrix) );
     gl.drawArrays( gl.TRIANGLES, 0, numVertices );
 
